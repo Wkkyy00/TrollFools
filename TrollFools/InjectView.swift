@@ -109,7 +109,6 @@ struct InjectView: View {
 
     private func inject() -> Result<URL?, Error> {
         var logFileURL: URL?
-
         do {
             let injector = try InjectorV3(app.url)
             logFileURL = injector.latestLogFileURL
@@ -127,6 +126,11 @@ struct InjectView: View {
             injector.injectStrategy = injectStrategy
 
             try injector.inject(urlList, shouldPersist: true)
+            
+            // ======== 新增代码：注入成功后记录到最近注入列表 ========
+            AppListModel.recordInjection(for: app.bid)
+            // ======== 新增代码 结束 ========
+
             return .success(injector.latestLogFileURL)
 
         } catch {

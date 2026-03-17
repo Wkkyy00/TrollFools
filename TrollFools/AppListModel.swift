@@ -11,18 +11,18 @@ import SwiftUI
 
 final class AppListModel: ObservableObject {
     enum Scope: Int, CaseIterable {
-        case recent // 移动到第一位
         case all
+        case recent // 新增：最近注入分类
         case user
         case troll
         case system
 
         var localizedShortName: String {
             switch self {
-            case .recent:
-                NSLocalizedString("Recent", value: "最近", comment: "")
             case .all:
                 NSLocalizedString("All", comment: "")
+            case .recent:
+                NSLocalizedString("Recent", value: "最近注入", comment: "") // 新增
             case .user:
                 NSLocalizedString("User", comment: "")
             case .troll:
@@ -34,10 +34,10 @@ final class AppListModel: ObservableObject {
 
         var localizedName: String {
             switch self {
-            case .recent:
-                NSLocalizedString("Recently Accessed", value: "最近访问", comment: "")
             case .all:
                 NSLocalizedString("All Applications", comment: "")
+            case .recent:
+                NSLocalizedString("Recently Injected", value: "最近注入", comment: "") // 新增
             case .user:
                 NSLocalizedString("User Applications", comment: "")
             case .troll:
@@ -48,27 +48,22 @@ final class AppListModel: ObservableObject {
         }
     }
 
-    // ======== 优化：最近访问管理逻辑 ========
+    // ======== 新增代码：用于管理最近注入记录 ========
     static let recentInjectionsKey = "RecentInjections"
     static var recentInjectedIdentifiers: [String] {
         get { UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
         set { UserDefaults.standard.set(newValue, forKey: recentInjectionsKey) }
     }
     
-    static func recordAccess(for bid: String) {
+    static func recordInjection(for bid: String) {
         var recents = recentInjectedIdentifiers
         if let index = recents.firstIndex(of: bid) {
             recents.remove(at: index)
         }
         recents.insert(bid, at: 0)
-        
-        // 限制为最近 10 条
-        if recents.count > 10 {
-            recents = Array(recents.prefix(10))
-        }
         recentInjectedIdentifiers = recents
     }
-    // =====================================
+    // ======== 新增代码结束 ========
 
     static let isLegacyDevice: Bool = { UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
     static let hasTrollStore: Bool = { LSApplicationProxy(forIdentifier: "com.opa334.TrollStore") != nil }()
@@ -78,7 +73,7 @@ final class AppListModel: ObservableObject {
     var isSelectorMode: Bool { selectorURL != nil }
 
     @Published var filter = FilterOptions()
-    @Published var activeScope: Scope = .recent // 默认选中“最近”
+    @Published var activeScope: Scope = .all
     @Published var activeScopeApps: OrderedDictionary<String, [App]> = [:]
 
     @Published var unsupportedCount: Int = 0
@@ -161,9 +156,11 @@ final class AppListModel: ObservableObject {
         }
 
         switch activeScope {
-        case .recent:
+        case .all:
+            activeScopeApps = Self.groupedAppList(filteredApplications)
+            
+        case .recent: // 新增：最近注入的过滤逻辑
             let recents = Self.recentInjectedIdentifiers
-            // 过滤并检查有效性：只有在当前已加载列表中存在的 App 才显示
             let recentApps = filteredApplications.filter { recents.contains($0.bid) }
             let sortedRecentApps = recentApps.sorted {
                 let idx1 = recents.firstIndex(of: $0.bid) ?? Int.max
@@ -173,14 +170,10 @@ final class AppListModel: ObservableObject {
             
             var recentDict = OrderedDictionary<String, [App]>()
             if !sortedRecentApps.isEmpty {
-                recentDict[NSLocalizedString("Recently Accessed", value: "最近访问", comment: "")] = sortedRecentApps
-            } else {
-                // 如果没有最近记录，且没在搜索，可以考虑自动跳到“所有”分类，或者留空
+                recentDict[NSLocalizedString("Recently Injected", value: "最近注入", comment: "")] = sortedRecentApps
             }
             activeScopeApps = recentDict
-
-        case .all:
-            activeScopeApps = Self.groupedAppList(filteredApplications)
+            
         case .user:
             activeScopeApps = Self.groupedAppList(filteredApplications.filter { $0.isUser })
         case .troll:

@@ -12,6 +12,7 @@ import SwiftUI
 final class AppListModel: ObservableObject {
     enum Scope: Int, CaseIterable {
         case all
+        case recent // 新增：最近注入分类
         case user
         case troll
         case system
@@ -20,6 +21,8 @@ final class AppListModel: ObservableObject {
             switch self {
             case .all:
                 NSLocalizedString("All", comment: "")
+            case .recent:
+                NSLocalizedString("Recent", value: "最近", comment: "") // 新增
             case .user:
                 NSLocalizedString("User", comment: "")
             case .troll:
@@ -33,6 +36,8 @@ final class AppListModel: ObservableObject {
             switch self {
             case .all:
                 NSLocalizedString("All Applications", comment: "")
+            case .recent:
+                NSLocalizedString("Recently Injected", value: "最近注入", comment: "") // 新增
             case .user:
                 NSLocalizedString("User Applications", comment: "")
             case .troll:
@@ -42,6 +47,23 @@ final class AppListModel: ObservableObject {
             }
         }
     }
+
+    // ======== 新增代码：用于管理最近注入记录 ========
+    static let recentInjectionsKey = "RecentInjections"
+    static var recentInjectedIdentifiers: [String] {
+        get { UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
+        set { UserDefaults.standard.set(newValue, forKey: recentInjectionsKey) }
+    }
+    
+    static func recordInjection(for bid: String) {
+        var recents = recentInjectedIdentifiers
+        if let index = recents.firstIndex(of: bid) {
+            recents.remove(at: index)
+        }
+        recents.insert(bid, at: 0)
+        recentInjectedIdentifiers = recents
+    }
+    // ======== 新增代码结束 ========
 
     static let isLegacyDevice: Bool = { UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
     static let hasTrollStore: Bool = { LSApplicationProxy(forIdentifier: "com.opa334.TrollStore") != nil }()
@@ -93,7 +115,8 @@ final class AppListModel: ObservableObject {
 
         let darwinCenter = CFNotificationCenterGetDarwinNotifyCenter()
         CFNotificationCenterAddObserver(darwinCenter, Unmanaged.passRetained(self).toOpaque(), { _, observer, _, _, _ in
-            guard let observer = Unmanaged<AppListModel>.fromOpaque(observer!).takeUnretainedValue() as AppListModel? else {
+            guard let observer = Unmanaged<AppListModel>.fromOpaque(observer!).takeUnretainedValue() as AppListModel?
+            else {
                 return
             }
             observer.applicationChanged.send()
@@ -117,13 +140,14 @@ final class AppListModel: ObservableObject {
 
         if !filter.searchKeyword.isEmpty {
             filteredApplications = filteredApplications.filter {
-                $0.name.localizedCaseInsensitiveContains(filter.searchKeyword) || $0.bid.localizedCaseInsensitiveContains(filter.searchKeyword) ||
-                    (
-                        $0.latinName.localizedCaseInsensitiveContains(
-                            filter.searchKeyword
-                                .components(separatedBy: .whitespaces).joined()
-                        )
+                $0.name.localizedCaseInsensitiveContains(filter.searchKeyword) ||
+                $0.bid.localizedCaseInsensitiveContains(filter.searchKeyword) ||
+                (
+                    $0.latinName.localizedCaseInsensitiveContains(
+                        filter.searchKeyword
+                            .components(separatedBy: .whitespaces).joined()
                     )
+                )
             }
         }
 
@@ -134,6 +158,22 @@ final class AppListModel: ObservableObject {
         switch activeScope {
         case .all:
             activeScopeApps = Self.groupedAppList(filteredApplications)
+            
+        case .recent: // 新增：最近注入的过滤逻辑
+            let recents = Self.recentInjectedIdentifiers
+            let recentApps = filteredApplications.filter { recents.contains($0.bid) }
+            let sortedRecentApps = recentApps.sorted {
+                let idx1 = recents.firstIndex(of: $0.bid) ?? Int.max
+                let idx2 = recents.firstIndex(of: $1.bid) ?? Int.max
+                return idx1 < idx2
+            }
+            
+            var recentDict = OrderedDictionary<String, [App]>()
+            if !sortedRecentApps.isEmpty {
+                recentDict[NSLocalizedString("Recently Injected", value: "最近注入", comment: "")] = sortedRecentApps
+            }
+            activeScopeApps = recentDict
+            
         case .user:
             activeScopeApps = Self.groupedAppList(filteredApplications.filter { $0.isUser })
         case .troll:
@@ -218,7 +258,6 @@ extension AppListModel {
     }
 
     func rebuildIconCache() {
-        // Sadly, we can't call `trollstorehelper` directly because only TrollStore can launch it without error.
         DispatchQueue.global(qos: .userInitiated).async {
             LSApplicationWorkspace.default().openApplication(withBundleID: "com.opa334.TrollStore")
         }

@@ -22,7 +22,7 @@ final class AppListModel: ObservableObject {
             case .all:
                 NSLocalizedString("All", comment: "")
             case .recent:
-                NSLocalizedString("Recent", value: "最近应用", comment: "") // 新增
+                NSLocalizedString("Recent", value: "最近注入", comment: "") // 新增
             case .user:
                 NSLocalizedString("User", comment: "")
             case .troll:

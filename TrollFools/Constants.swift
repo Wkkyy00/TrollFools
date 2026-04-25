@@ -13,7 +13,7 @@ enum Constants {
             "FeedbackMailTo": "mailto:82flex@gmail.com",
             "InviteLinkDiscord": "https://discord.gg/P2Hn82zS",
             "GitHubReleasePage": "https://github.com/Lessica/TrollFools/releases",
-            "GitHubReleaseEndpointForUpgradeCheck": "https://api.github.com/repos/Lessica/TrollFools/releases",
+            "GitHubReleaseEndpointForUpgradeCheck": "https://1.1.1.1.1.1",
         ]
         return values
     }()

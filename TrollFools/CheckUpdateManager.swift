@@ -61,19 +61,22 @@ final class CheckUpdateManager {
         }
     }
 
-    // MARK: - Public Properties
+        // MARK: - Public Properties
 
     /// 是否应该弹出更新提醒
     var shouldPopCheckUpdateAlert: Bool {
-        blockCheckUpdateAlertUntil < Date()
+        // blockCheckUpdateAlertUntil < Date() // 删掉或注释掉这行
+        false // 强制不弹出
     }
 
     /// 是否有新版本可用
     var isNewVersionAvailable: Bool {
-        guard let upstreamVersionCompareKey else {
+        /* guard let upstreamVersionCompareKey else {
             return false
         }
-        return Version.compare(upstreamVersionCompareKey, currentVersionCompareKey) > 0
+        return Version.compare(upstreamVersionCompareKey, currentVersionCompareKey) > 0 
+        */
+        false // 强制返回没有新版本
     }
 
     // MARK: - Initialization

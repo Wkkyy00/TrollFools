@@ -100,6 +100,11 @@ struct AppListView: View {
                     .environmentObject(AppListModel(selectorURL: urlWrapper.url))
             }
             .onOpenURL { url in
+                // ======== 修复部分 开始 ========
+                guard !appList.isSelectorMode else {
+                    return
+                }
+
                 let ext = url.pathExtension.lowercased()
                 guard url.isFileURL,
                       ext == "dylib" || ext == "deb" || ext == "zip"
@@ -116,7 +121,15 @@ struct AppListView: View {
                     }
                 }
 
-                selectorOpenedURL = urlIdent
+                if selectorOpenedURL != nil {
+                    selectorOpenedURL = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        selectorOpenedURL = urlIdent
+                    }
+                } else {
+                    selectorOpenedURL = urlIdent
+                }
+                // ======== 修复部分 结束 ========
             }
             .onAppear {
                 if Double.random(in: 0 ..< 1) < 0.1 {
@@ -251,8 +264,7 @@ struct AppListView: View {
             shouldShowAdvertisement
         ))
         .listStyle(.insetGrouped)
-        .navigationTitle(appList.isSelectorMode ?
-            NSLocalizedString("Select Application to Inject", comment: "") :
+        .navigationTitle(appList.isSelectorMode ? NSLocalizedString("Select Application to Inject", comment: "") :
             NSLocalizedString("TrollFools", comment: "")
         )
         .navigationBarTitleDisplayMode((AppListModel.isLegacyDevice || appList.isSelectorMode) ? .inline : .automatic)

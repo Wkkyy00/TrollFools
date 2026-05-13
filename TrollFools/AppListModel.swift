@@ -17,18 +17,18 @@ final class AppListModel: ObservableObject {
         var localizedShortName: String {
             switch self {
             case .all:
-                NSLocalizedString("All", comment: "")
+                return NSLocalizedString("All", comment: "")
             case .recent:
-                NSLocalizedString("Recent", value: "最近注入", comment: "")
+                return NSLocalizedString("Recent", value: "最近注入", comment: "")
             }
         }
 
         var localizedName: String {
             switch self {
             case .all:
-                NSLocalizedString("All Applications", comment: "")
+                return NSLocalizedString("All Applications", comment: "")
             case .recent:
-                NSLocalizedString("Recently Injected", value: "最近注入", comment: "")
+                return NSLocalizedString("Recently Injected", value: "最近注入", comment: "")
             }
         }
     }
@@ -36,7 +36,7 @@ final class AppListModel: ObservableObject {
     // ======== 新增代码：用于管理最近注入记录 ========
     static let recentInjectionsKey = "RecentInjections"
     static var recentInjectedIdentifiers: [String] {
-        get { UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
+        get { return UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
         set { UserDefaults.standard.set(newValue, forKey: recentInjectionsKey) }
     }
     
@@ -50,8 +50,8 @@ final class AppListModel: ObservableObject {
     }
     // ======== 新增代码结束 ========
 
-    static let isLegacyDevice: Bool = { UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
-    static let hasTrollStore: Bool = { LSApplicationProxy(forIdentifier: "com.opa334.TrollStore") != nil }()
+    static let isLegacyDevice: Bool = { return UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
+    static let hasTrollStore: Bool = { return LSApplicationProxy(forIdentifier: "com.opa334.TrollStore") != nil }()
     private var _allApplications: [App] = []
 
     let selectorURL: URL?

@@ -491,6 +491,10 @@ struct AppListView: View {
         searchController.searchBar.delegate = searchViewModel
         searchController.searchBar.showsScopeBar = true
         searchController.searchBar.scopeButtonTitles = Scope.allCases.map { $0.localizedShortName }
+        
+        // 同步 UI 光标位置到数据模型中设置的默认分类（最近注入）
+        searchController.searchBar.selectedScopeButtonIndex = searchViewModel.searchScopeIndex
+        
         searchController.searchBar.autocapitalizationType = .none
         searchController.searchBar.autocorrectionType = .no
 

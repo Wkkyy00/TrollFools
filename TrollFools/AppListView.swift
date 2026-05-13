@@ -366,38 +366,16 @@ struct AppListView: View {
     func appSection(forKey sectionKey: String) -> some View {
         Section {
             ForEach(appList.activeScopeApps[sectionKey] ?? [], id: \.bid) { app in
-                if #available(iOS 15, *) {
-                    NavigationLink {
-                        if appList.isSelectorMode, let selectorURL = appList.selectorURL {
-                            InjectView(app, urlList: [selectorURL])
-                        } else {
-                            OptionView(app)
-                        }
-                    } label: {
-                        if #available(iOS 16, *) {
-                            AppListCell(app: app)
-                        } else {
-                            AppListCell(app: app)
-                                .padding(.vertical, 4)
-                        }
+                NavigationLink {
+                    if appList.isSelectorMode, let selectorURL = appList.selectorURL {
+                        InjectView(app, urlList: [selectorURL])
+                    } else {
+                        OptionView(app)
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        if appList.activeScope == .recent {
-                            Button(role: .destructive) {
-                                appList.removeRecentInjection(for: app.bid)
-                            } label: {
-                                Label(NSLocalizedString("Delete", comment: ""), systemImage: "trash")
-                            }
-                        }
-                    }
-                } else {
-                    NavigationLink {
-                        if appList.isSelectorMode, let selectorURL = appList.selectorURL {
-                            InjectView(app, urlList: [selectorURL])
-                        } else {
-                            OptionView(app)
-                        }
-                    } label: {
+                } label: {
+                    if #available(iOS 16, *) {
+                        AppListCell(app: app)
+                    } else {
                         AppListCell(app: app)
                             .padding(.vertical, 4)
                     }

@@ -48,6 +48,19 @@ final class AppListModel: ObservableObject {
         recents.insert(bid, at: 0)
         recentInjectedIdentifiers = recents
     }
+
+    static func removeRecentInjection(for bid: String) {
+        var recents = recentInjectedIdentifiers
+        if let index = recents.firstIndex(of: bid) {
+            recents.remove(at: index)
+            recentInjectedIdentifiers = recents
+        }
+    }
+
+    func removeRecentInjectionRecord(for bid: String) {
+        Self.removeRecentInjection(for: bid)
+        self.performFilter()
+    }
     // ======== 新增代码结束 ========
 
     static let isLegacyDevice: Bool = { return UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
@@ -100,7 +113,8 @@ final class AppListModel: ObservableObject {
 
         let darwinCenter = CFNotificationCenterGetDarwinNotifyCenter()
         CFNotificationCenterAddObserver(darwinCenter, Unmanaged.passRetained(self).toOpaque(), { _, observer, _, _, _ in
-            guard let observer = Unmanaged<AppListModel>.fromOpaque(observer!).takeUnretainedValue() as AppListModel? else {
+            guard let observer = Unmanaged<AppListModel>.fromOpaque(observer!).takeUnretainedValue() as AppListModel?
+            else {
                 return
             }
             observer.applicationChanged.send()

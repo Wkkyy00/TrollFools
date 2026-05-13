@@ -12,23 +12,14 @@ import SwiftUI
 final class AppListModel: ObservableObject {
     enum Scope: Int, CaseIterable {
         case all
-        case recent // 新增：最近注入分类
-        case user
-        case troll
-        case system
+        case recent // 保留最近注入
 
         var localizedShortName: String {
             switch self {
             case .all:
                 NSLocalizedString("All", comment: "")
             case .recent:
-                NSLocalizedString("Recent", value: "最近注入", comment: "") // 新增
-            case .user:
-                NSLocalizedString("User", comment: "")
-            case .troll:
-                NSLocalizedString("TrollStore", comment: "")
-            case .system:
-                NSLocalizedString("System", comment: "")
+                NSLocalizedString("Recent", value: "最近注入", comment: "")
             }
         }
 
@@ -37,13 +28,7 @@ final class AppListModel: ObservableObject {
             case .all:
                 NSLocalizedString("All Applications", comment: "")
             case .recent:
-                NSLocalizedString("Recently Injected", value: "最近注入", comment: "") // 新增
-            case .user:
-                NSLocalizedString("User Applications", comment: "")
-            case .troll:
-                NSLocalizedString("TrollStore Applications", comment: "")
-            case .system:
-                NSLocalizedString("Injectable System Applications", comment: "")
+                NSLocalizedString("Recently Injected", value: "最近注入", comment: "")
             }
         }
     }
@@ -73,7 +58,7 @@ final class AppListModel: ObservableObject {
     var isSelectorMode: Bool { selectorURL != nil }
 
     @Published var filter = FilterOptions()
-    @Published var activeScope: Scope = .recent
+    @Published var activeScope: Scope = .recent // 默认加载最近注入
     @Published var activeScopeApps: OrderedDictionary<String, [App]> = [:]
 
     @Published var unsupportedCount: Int = 0
@@ -115,8 +100,7 @@ final class AppListModel: ObservableObject {
 
         let darwinCenter = CFNotificationCenterGetDarwinNotifyCenter()
         CFNotificationCenterAddObserver(darwinCenter, Unmanaged.passRetained(self).toOpaque(), { _, observer, _, _, _ in
-            guard let observer = Unmanaged<AppListModel>.fromOpaque(observer!).takeUnretainedValue() as AppListModel?
-            else {
+            guard let observer = Unmanaged<AppListModel>.fromOpaque(observer!).takeUnretainedValue() as AppListModel? else {
                 return
             }
             observer.applicationChanged.send()
@@ -159,7 +143,7 @@ final class AppListModel: ObservableObject {
         case .all:
             activeScopeApps = Self.groupedAppList(filteredApplications)
             
-        case .recent: // 新增：最近注入的过滤逻辑
+        case .recent: // 最近注入的过滤逻辑
             let recents = Self.recentInjectedIdentifiers
             let recentApps = filteredApplications.filter { recents.contains($0.bid) }
             let sortedRecentApps = recentApps.sorted {
@@ -173,13 +157,6 @@ final class AppListModel: ObservableObject {
                 recentDict[NSLocalizedString("Recently Injected", value: "最近注入", comment: "")] = sortedRecentApps
             }
             activeScopeApps = recentDict
-            
-        case .user:
-            activeScopeApps = Self.groupedAppList(filteredApplications.filter { $0.isUser })
-        case .troll:
-            activeScopeApps = Self.groupedAppList(filteredApplications.filter { $0.isFromTroll })
-        case .system:
-            activeScopeApps = Self.groupedAppList(filteredApplications.filter { $0.isFromApple })
         }
     }
 

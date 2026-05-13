@@ -160,6 +160,24 @@ struct AppListCell: View {
             }
         }
         .disabled(!isFilzaInstalled)
+        
+        // ======== 新增代码：如果是最近注入列表，显示删除记录按钮 ========
+        if appList.activeScope == .recent {
+            if #available(iOS 15.0, *) {
+                Button(role: .destructive) {
+                    appList.removeRecentInjectionRecord(for: app.bid)
+                } label: {
+                    Label(NSLocalizedString("Remove Record", value: "移除记录", comment: ""), systemImage: "trash")
+                }
+            } else {
+                Button {
+                    appList.removeRecentInjectionRecord(for: app.bid)
+                } label: {
+                    Label(NSLocalizedString("Remove Record", value: "移除记录", comment: ""), systemImage: "trash")
+                }
+            }
+        }
+        // ======== 新增代码结束 ========
     }
 
     @ViewBuilder

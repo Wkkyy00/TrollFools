@@ -315,11 +315,9 @@ struct AppListView: View {
 
                 if !appList.filter.isSearching && !appList.filter.showPatchedOnly && !appList.isRebuildNeeded {
                     paddedHeaderFooterText(
-                        appList.activeScope == .system
-                            ? NSLocalizedString("Only removable system applications are eligible and listed.", comment: "")
-                            : (appList.activeScope != .troll && appList.unsupportedCount > 0
-                                ? String(format: NSLocalizedString("And %d more unsupported user applications.", comment: ""), appList.unsupportedCount)
-                                : "")
+                        appList.unsupportedCount > 0
+                            ? String(format: NSLocalizedString("And %d more unsupported user applications.", comment: ""), appList.unsupportedCount)
+                            : ""
                     )
                     .transition(.opacity)
                 }

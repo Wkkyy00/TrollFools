@@ -100,6 +100,7 @@ struct AppListView: View {
                     .environmentObject(AppListModel(selectorURL: urlWrapper.url))
             }
             .onOpenURL { url in
+                // ======== 修复部分 开始 ========
                 guard !appList.isSelectorMode else {
                     return
                 }
@@ -128,6 +129,7 @@ struct AppListView: View {
                 } else {
                     selectorOpenedURL = urlIdent
                 }
+                // ======== 修复部分 结束 ========
             }
             .onAppear {
                 if Double.random(in: 0 ..< 1) < 0.1 {
@@ -176,6 +178,7 @@ struct AppListView: View {
                 }
             }
 
+            // Detail view shown when nothing has been selected
             if !appList.isSelectorMode {
                 PlaceholderView()
             }
@@ -487,6 +490,7 @@ struct AppListView: View {
         searchController.searchBar.showsScopeBar = true
         searchController.searchBar.scopeButtonTitles = Scope.allCases.map { $0.localizedShortName }
         
+        // 同步 UI 光标位置到数据模型中设置的默认分类（最近注入）
         searchController.searchBar.selectedScopeButtonIndex = searchViewModel.searchScopeIndex
         
         searchController.searchBar.autocapitalizationType = .none

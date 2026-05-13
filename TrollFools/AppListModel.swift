@@ -33,7 +33,7 @@ final class AppListModel: ObservableObject {
         }
     }
 
-    // ======== 用于管理最近注入记录 ========
+    // ======== 新增代码：用于管理最近注入记录 ========
     static let recentInjectionsKey = "RecentInjections"
     static var recentInjectedIdentifiers: [String] {
         get { return UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
@@ -48,20 +48,7 @@ final class AppListModel: ObservableObject {
         recents.insert(bid, at: 0)
         recentInjectedIdentifiers = recents
     }
-
-    static func removeInjectionRecord(for bid: String) {
-        var recents = recentInjectedIdentifiers
-        if let index = recents.firstIndex(of: bid) {
-            recents.remove(at: index)
-            recentInjectedIdentifiers = recents
-        }
-    }
-
-    func removeRecentInjection(for bid: String) {
-        Self.removeInjectionRecord(for: bid)
-        reload() 
-    }
-    // ======== 管理记录结束 ========
+    // ======== 新增代码结束 ========
 
     static let isLegacyDevice: Bool = { return UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
     static let hasTrollStore: Bool = { return LSApplicationProxy(forIdentifier: "com.opa334.TrollStore") != nil }()
@@ -156,7 +143,7 @@ final class AppListModel: ObservableObject {
         case .all:
             activeScopeApps = Self.groupedAppList(filteredApplications)
             
-        case .recent: 
+        case .recent: // 最近注入的过滤逻辑
             let recents = Self.recentInjectedIdentifiers
             let recentApps = filteredApplications.filter { recents.contains($0.bid) }
             let sortedRecentApps = recentApps.sorted {

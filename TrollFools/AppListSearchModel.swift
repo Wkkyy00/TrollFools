@@ -10,7 +10,7 @@ import UIKit
 
 final class AppListSearchModel: NSObject, ObservableObject {
     @Published var searchKeyword: String = ""
-    @Published var searchScopeIndex: Int = 0
+    @Published var searchScopeIndex: Int = 1
 
     weak var searchController: UISearchController?
     weak var forwardSearchBarDelegate: (any UISearchBarDelegate)?

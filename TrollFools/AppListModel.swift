@@ -12,7 +12,7 @@ import SwiftUI
 final class AppListModel: ObservableObject {
     enum Scope: Int, CaseIterable {
         case all
-        case recent
+        case recent // 保留最近注入
 
         var localizedShortName: String {
             switch self {
@@ -33,6 +33,7 @@ final class AppListModel: ObservableObject {
         }
     }
 
+    // ======== 用于管理最近注入记录 ========
     static let recentInjectionsKey = "RecentInjections"
     static var recentInjectedIdentifiers: [String] {
         get { return UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
@@ -58,10 +59,7 @@ final class AppListModel: ObservableObject {
 
     func removeRecentInjectionRecord(for bid: String) {
         Self.removeRecentInjection(for: bid)
-        // ======== 优化：为删除记录操作添加弹簧动画 ========
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-            self.performFilter()
-        }
+        self.performFilter()
     }
 
     static let isLegacyDevice: Bool = { return UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
@@ -73,6 +71,7 @@ final class AppListModel: ObservableObject {
 
     @Published var filter = FilterOptions()
     
+    // ======== 修复闪烁：初始化时同步读取记忆索引 ========
     @Published var activeScope: Scope = {
         let key = "DefaultSearchScopeIndex"
         let savedIndex = UserDefaults.standard.object(forKey: key) == nil ? 1 : UserDefaults.standard.integer(forKey: key)
@@ -101,30 +100,15 @@ final class AppListModel: ObservableObject {
         self.selectorURL = selectorURL
         reload()
 
-        // ======== 核心优化：拆分监听，移除导致卡顿的 0.5s 延迟 ========
-        
-        // 1. 专门监听搜索框，保留 0.3 秒防抖，防止打字过快卡顿
-        $filter
-            .dropFirst()
-            .throttle(for: 0.3, scheduler: DispatchQueue.main, latest: true)
-            .sink { [weak self] _ in
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                    self?.performFilter()
-                }
-            }
-            .store(in: &cancellables)
-
-        // 2. 专门监听分类切换，瞬间响应，零延迟，并注入原生弹簧动画
-        $activeScope
-            .dropFirst()
-            .sink { [weak self] _ in
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                    self?.performFilter()
-                }
-            }
-            .store(in: &cancellables)
-            
-        // ======== 优化结束 ========
+        Publishers.CombineLatest(
+            $filter,
+            $activeScope
+        )
+        .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)
+        .sink { [weak self] _ in
+            self?.performFilter()
+        }
+        .store(in: &cancellables)
 
         applicationChanged
             .throttle(for: 0.5, scheduler: DispatchQueue.main, latest: true)

@@ -33,7 +33,7 @@ final class AppListModel: ObservableObject {
         }
     }
 
-    // ======== 新增代码：用于管理最近注入记录 ========
+    // ======== 用于管理最近注入记录 ========
     static let recentInjectionsKey = "RecentInjections"
     static var recentInjectedIdentifiers: [String] {
         get { return UserDefaults.standard.stringArray(forKey: recentInjectionsKey) ?? [] }
@@ -61,7 +61,6 @@ final class AppListModel: ObservableObject {
         Self.removeRecentInjection(for: bid)
         self.performFilter()
     }
-    // ======== 新增代码结束 ========
 
     static let isLegacyDevice: Bool = { return UIScreen.main.fixedCoordinateSpace.bounds.height <= 736.0 }()
     static let hasTrollStore: Bool = { return LSApplicationProxy(forIdentifier: "com.opa334.TrollStore") != nil }()
@@ -71,7 +70,14 @@ final class AppListModel: ObservableObject {
     var isSelectorMode: Bool { selectorURL != nil }
 
     @Published var filter = FilterOptions()
-    @Published var activeScope: Scope = .recent // 默认加载最近注入
+    
+    // ======== 修复闪烁：初始化时同步读取记忆索引 ========
+    @Published var activeScope: Scope = {
+        let key = "DefaultSearchScopeIndex"
+        let savedIndex = UserDefaults.standard.object(forKey: key) == nil ? 1 : UserDefaults.standard.integer(forKey: key)
+        return Scope(rawValue: savedIndex) ?? .recent
+    }()
+    
     @Published var activeScopeApps: OrderedDictionary<String, [App]> = [:]
 
     @Published var unsupportedCount: Int = 0
@@ -157,7 +163,7 @@ final class AppListModel: ObservableObject {
         case .all:
             activeScopeApps = Self.groupedAppList(filteredApplications)
             
-        case .recent: // 最近注入的过滤逻辑
+        case .recent: 
             let recents = Self.recentInjectedIdentifiers
             let recentApps = filteredApplications.filter { recents.contains($0.bid) }
             let sortedRecentApps = recentApps.sorted {

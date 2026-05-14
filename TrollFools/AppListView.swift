@@ -71,8 +71,7 @@ struct AppListView: View {
 
     var content: some View {
         styledNavigationView
-            // ======== 优化：将生硬的 easeOut 改为弹簧动画 ========
-            .animation(.spring(response: 0.35, dampingFraction: 0.85), value: appList.activeScopeApps.keys)
+            .animation(.easeOut, value: appList.activeScopeApps.keys)
             .sheet(item: $selectorOpenedURL) { urlWrapper in
                 AppListView()
                     .environmentObject(AppListModel(selectorURL: urlWrapper.url))
@@ -141,6 +140,7 @@ struct AppListView: View {
                 }
             }
 
+            // Detail view shown when nothing has been selected
             if !appList.isSelectorMode {
                 PlaceholderView()
             }
@@ -218,8 +218,7 @@ struct AppListView: View {
 
             appSections
         }
-        // ======== 优化：将整个列表更新状态同步改为弹簧动画 ========
-        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: combines(
+        .animation(.easeOut, value: combines(
             appList.isRebuildNeeded,
             appList.activeScope,
             appList.filter,

@@ -10,7 +10,21 @@ import UIKit
 
 final class AppListSearchModel: NSObject, ObservableObject {
     @Published var searchKeyword: String = ""
-    @Published var searchScopeIndex: Int = 1
+    
+    // ======== 修改部分：加入本地持久化记忆 ========
+    @Published var searchScopeIndex: Int = {
+        let key = "DefaultSearchScopeIndex"
+        // 如果本地还没有存过，默认给 1（最近注入），0 是全部应用
+        if UserDefaults.standard.object(forKey: key) == nil {
+            return 1
+        }
+        return UserDefaults.standard.integer(forKey: key)
+    }() {
+        didSet {
+            UserDefaults.standard.set(searchScopeIndex, forKey: "DefaultSearchScopeIndex")
+        }
+    }
+    // ======== 修改部分结束 ========
 
     weak var searchController: UISearchController?
     weak var forwardSearchBarDelegate: (any UISearchBarDelegate)?

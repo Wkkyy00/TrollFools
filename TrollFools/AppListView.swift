@@ -20,7 +20,7 @@ struct AppListView: View {
     @Environment(\.verticalSizeClass) var verticalSizeClass
 
     @State var selectorOpenedURL: URLIdentifiable? = nil
-    @State var selectedIndex: String? = nil
+    // 移除 selectedIndex 状态
 
     @State var isWarningPresented = false
     @State var temporaryOpenedURL: URLIdentifiable? = nil
@@ -162,19 +162,7 @@ struct AppListView: View {
             ScrollViewReader { reader in
                 ZStack {
                     refreshableListView
-
-                    if verticalSizeClass == .regular && appList.activeScopeApps.keys.count > 1 {
-                        IndexableScroller(
-                            indexes: appList.activeScopeApps.keys.elements,
-                            currentIndex: $selectedIndex
-                        )
-                        .accessibilityHidden(true)
-                    }
-                }
-                .onChange(of: selectedIndex) { index in
-                    if let index {
-                        reader.scrollTo("AppSection-\(index)", anchor: .center)
-                    }
+                    // 此处移除了 IndexableScroller 组件 (A-Z字母索引)
                 }
             }
 
@@ -278,7 +266,6 @@ struct AppListView: View {
                     }
                 }
             }
-            // 这里移除了原本放在右上角 (.navigationBarTrailing) 的过滤按钮
         }
     }
 
@@ -375,7 +362,7 @@ struct AppListView: View {
                 paddedHeaderFooterText(NSLocalizedString("No Applications", comment: ""))
                     .textCase(.none)
             } else {
-                paddedHeaderFooterText(sectionKey == selectedIndex ? "→ \(sectionKey)" : sectionKey)
+                paddedHeaderFooterText(sectionKey)
             }
         } footer: {
             if (sectionKey == "_" || sectionKey == appList.activeScopeApps.keys.last) && !appList.isSelectorMode && !appList.filter.isSearching {
@@ -476,7 +463,6 @@ struct AppListView: View {
         searchController.searchBar.showsScopeBar = true
         searchController.searchBar.scopeButtonTitles = Scope.allCases.map { $0.localizedShortName }
         
-        // 同步 UI 光标位置到数据模型中设置的默认分类（最近注入）
         searchController.searchBar.selectedScopeButtonIndex = searchViewModel.searchScopeIndex
         
         searchController.searchBar.autocapitalizationType = .none

@@ -20,7 +20,6 @@ struct AppListView: View {
     @Environment(\.verticalSizeClass) var verticalSizeClass
 
     @State var selectorOpenedURL: URLIdentifiable? = nil
-    // 移除 selectedIndex 状态
 
     @State var isWarningPresented = false
     @State var temporaryOpenedURL: URLIdentifiable? = nil
@@ -100,7 +99,6 @@ struct AppListView: View {
                     .environmentObject(AppListModel(selectorURL: urlWrapper.url))
             }
             .onOpenURL { url in
-                // ======== 修复部分 开始 ========
                 guard !appList.isSelectorMode else {
                     return
                 }
@@ -129,7 +127,6 @@ struct AppListView: View {
                 } else {
                     selectorOpenedURL = urlIdent
                 }
-                // ======== 修复部分 结束 ========
             }
             .onAppear {
                 if Double.random(in: 0 ..< 1) < 0.1 {
@@ -162,7 +159,6 @@ struct AppListView: View {
             ScrollViewReader { reader in
                 ZStack {
                     refreshableListView
-                    // 此处移除了 IndexableScroller 组件 (A-Z字母索引)
                 }
             }
 
@@ -285,15 +281,8 @@ struct AppListView: View {
                     upgradeButton
                         .transition(.opacity)
                 }
-
-                if !appList.filter.isSearching && !appList.filter.showPatchedOnly && !appList.isRebuildNeeded {
-                    paddedHeaderFooterText(
-                        appList.unsupportedCount > 0
-                            ? String(format: NSLocalizedString("And %d more unsupported user applications.", comment: ""), appList.unsupportedCount)
-                            : ""
-                    )
-                    .transition(.opacity)
-                }
+                
+                // ======== 修改部分：移除了 unsupportedCount 的显示逻辑 ========
             }
         }
         .id("TopSection")

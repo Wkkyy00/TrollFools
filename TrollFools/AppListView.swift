@@ -264,7 +264,8 @@ struct AppListView: View {
             shouldShowAdvertisement
         ))
         .listStyle(.insetGrouped)
-        .navigationTitle(appList.isSelectorMode ? NSLocalizedString("Select Application to Inject", comment: "") :
+        .navigationTitle(appList.isSelectorMode ?
+            NSLocalizedString("Select Application to Inject", comment: "") :
             NSLocalizedString("TrollFools", comment: "")
         )
         .navigationBarTitleDisplayMode((AppListModel.isLegacyDevice || appList.isSelectorMode) ? .inline : .automatic)
@@ -277,22 +278,7 @@ struct AppListView: View {
                     }
                 }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    appList.filter.showPatchedOnly.toggle()
-                } label: {
-                    if #available(iOS 15, *) {
-                        Image(systemName: appList.filter.showPatchedOnly
-                            ? "line.3.horizontal.decrease.circle.fill"
-                            : "line.3.horizontal.decrease.circle")
-                    } else {
-                        Image(systemName: appList.filter.showPatchedOnly
-                            ? "eject.circle.fill"
-                            : "eject.circle")
-                    }
-                }
-                .accessibilityLabel(NSLocalizedString("Show Patched Only", comment: ""))
-            }
+            // 这里移除了原本放在右上角 (.navigationBarTrailing) 的过滤按钮
         }
     }
 

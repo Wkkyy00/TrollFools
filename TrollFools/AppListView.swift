@@ -36,28 +36,6 @@ struct AppListView: View {
         false
     }
 
-    var appString: String {
-        let appNameString = Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "TrollFools"
-        let appVersionString = String(
-            format: "v%@ (%@)",
-            Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0",
-            Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
-        )
-
-        let appStringFormat = """
-        %@ %@
-        %@ © 2024-%d %@
-        """
-
-        return String(
-            format: appStringFormat,
-            appNameString, appVersionString,
-            NSLocalizedString("Copyright", comment: ""),
-            Calendar.current.component(.year, from: Date()),
-            NSLocalizedString("Lessica, huami1314, iosdump and other contributors", comment: "")
-        )
-    }
-
     var body: some View {
         if #available(iOS 15, *) {
             content
@@ -281,8 +259,6 @@ struct AppListView: View {
                     upgradeButton
                         .transition(.opacity)
                 }
-                
-                // ======== 修改部分：移除了 unsupportedCount 的显示逻辑 ========
             }
         }
         .id("TopSection")
@@ -353,10 +329,6 @@ struct AppListView: View {
             } else {
                 paddedHeaderFooterText(sectionKey)
             }
-        } footer: {
-            if (sectionKey == "_" || sectionKey == appList.activeScopeApps.keys.last) && !appList.isSelectorMode && !appList.filter.isSearching {
-                footer
-            }
         }
         .id("AppSection-\(sectionKey)")
     }
@@ -390,35 +362,6 @@ struct AppListView: View {
             paddedHeaderFooterText(NSLocalizedString("Buy our paid products to support us if you like TrollFools!", comment: ""))
         }
         .id("AdsSection")
-    }
-
-    @ViewBuilder
-    var footer: some View {
-        if #available(iOS 16, *) {
-            footerContent
-                .padding(.vertical, 16)
-        } else if #available(iOS 15, *) {
-            footerContent
-                .padding(.top, 10)
-                .padding(.bottom, 16)
-        } else {
-            footerContent
-                .padding(.all, 16)
-        }
-    }
-
-    var footerContent: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(appString)
-                .font(.footnote)
-
-            Button {
-                UIApplication.shared.open(URL(string: "https://github.com/Lessica/TrollFools")!)
-            } label: {
-                Text(NSLocalizedString("Source Code", comment: ""))
-                    .font(.footnote)
-            }
-        }
     }
 
     private func preprocessURL(_ url: URL) -> URL {

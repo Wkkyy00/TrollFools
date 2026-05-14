@@ -76,3 +76,4 @@ jobs:
           prerelease: false
           files: |
             *.tipa
+          delete_previous_assets: false

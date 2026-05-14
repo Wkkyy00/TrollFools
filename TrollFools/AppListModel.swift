@@ -12,7 +12,7 @@ import SwiftUI
 final class AppListModel: ObservableObject {
     enum Scope: Int, CaseIterable {
         case all
-        case recent
+        case recent // 保留最近注入
 
         var localizedShortName: String {
             switch self {
@@ -71,6 +71,7 @@ final class AppListModel: ObservableObject {
 
     @Published var filter = FilterOptions()
     
+    // ======== 修复闪烁：初始化时同步读取记忆索引 ========
     @Published var activeScope: Scope = {
         let key = "DefaultSearchScopeIndex"
         let savedIndex = UserDefaults.standard.object(forKey: key) == nil ? 1 : UserDefaults.standard.integer(forKey: key)
@@ -80,9 +81,6 @@ final class AppListModel: ObservableObject {
     @Published var activeScopeApps: OrderedDictionary<String, [App]> = [:]
 
     @Published var unsupportedCount: Int = 0
-    
-    // 加一把锁，防止后台并发多次读取
-    @Published var isReloading: Bool = false
 
     lazy var isFilzaInstalled: Bool = {
         if let filzaURL {
@@ -134,26 +132,11 @@ final class AppListModel: ObservableObject {
         CFNotificationCenterRemoveObserver(darwinCenter, Unmanaged.passUnretained(self).toOpaque(), nil, nil)
     }
 
-    // ======== 核心优化：异步加载数据，解决冷启动卡死问题 ========
     func reload() {
-        guard !isReloading else { return }
-        isReloading = true
-        
-        // 丢到后台队列执行耗时的 I/O 和跨进程通信
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            var localUnsupportedCount = 0
-            let allApplications = Self.fetchApplications(&localUnsupportedCount)
-            
-            // 算完之后，回到主线程刷新 UI
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                allApplications.forEach { $0.appList = self }
-                self._allApplications = allApplications
-                self.unsupportedCount = localUnsupportedCount
-                self.performFilter()
-                self.isReloading = false
-            }
-        }
+        let allApplications = Self.fetchApplications(&unsupportedCount)
+        allApplications.forEach { $0.appList = self }
+        _allApplications = allApplications
+        performFilter()
     }
 
     func performFilter() {
